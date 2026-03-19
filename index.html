@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Calculadora de Transferencia</title>
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #e3f2fd, #f5f7fa);
+    margin: 0;
+}
+
+.container {
+    width: 650px;
+    margin: 50px auto;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 15px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.15);
+}
+
+h2 {
+    text-align: center;
+}
+
+/* TABLA */
+.table {
+    width: 100%;
+    border-collapse: separate;
+}
+
+.table th {
+    background: #2a75bb;
+    color: white;
+    padding: 12px;
+    border-radius: 10px 10px 0 0;
+}
+
+.table td {
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+}
+
+.input-container {
+    display: flex;
+}
+
+/* INPUTS */
+input {
+    width: 100%;
+    height: 38px;
+    padding: 8px;
+    border-radius: 8px;
+    border: 2px solid #ccc;
+    text-align: right;
+    font-size: 14px;
+}
+
+/* COLORES */
+.green {
+    background: #e8f5e9;
+    border-color: #43a047;
+    font-weight: bold;
+}
+
+.red {
+    background: #fdecea;
+    border-color: #e53935;
+    font-weight: bold;
+}
+
+.readonly {
+    background: #f1f3f5;
+}
+
+/* ERROR */
+.error {
+    border-color: red !important;
+    animation: blink 0.5s alternate 3;
+}
+
+@keyframes blink {
+    from { background-color: #fdecea; }
+    to { background-color: #fff; }
+}
+
+/* BOTONES */
+.buttons {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-clear {
+    background: #ccc;
+}
+
+.btn-confirm {
+    background: #2a75bb;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #1b5e9e;
+}
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h2>Pesos a guaranies según cotización del día.</h2>
+
+<table class="table">
+<tr><th colspan="3">Detalles</th></tr>
+
+<tr>
+<td>Monto de envío</td>
+<td>ARS</td>
+<td><input id="montoEnvio" class="green" autocomplete="off"></td>
+</tr>
+
+<tr>
+<td>Tasa de cambio</td>
+<td>PYG</td>
+<td>
+<input 
+    id="tasaCambio" 
+    class="red"
+    type="text"
+    inputmode="decimal"
+    autocomplete="off"
+    >
+</td>
+</tr>
+
+<tr>
+<td>Monto a recibir</td>
+<td>PYG</td>
+<td><input id="recibir" class="readonly" readonly></td>
+</tr>
+
+<tr>
+<td>Costo servicio (5%)</td>
+<td>ARS</td>
+<td><input id="servicio" class="readonly" readonly></td>
+</tr>
+
+<tr>
+<td>Impuesto (21%)</td>
+<td>ARS</td>
+<td><input id="impuesto" class="readonly" readonly></td>
+</tr>
+
+<tr>
+<td>Costo total + impuesto</td>
+<td>ARS</td>
+<td><input id="totalCosto" class="readonly" readonly></td>
+</tr>
+
+<tr>
+<td><b>Total a depositar</b></td>
+<td><b>ARS</b></td>
+<td><input id="total" class="green readonly" readonly></td>
+</tr>
+
+</table>
+
+<div class="buttons">
+<button class="btn-clear" onclick="limpiar()">Limpiar</button>
+
+</div>
+
+</div>
+
+<script>
+const monto = document.getElementById("montoEnvio");
+const tasa = document.getElementById("tasaCambio");
+
+monto.addEventListener("input", calcular);
+tasa.addEventListener("input", calcular);
+
+function formatoARS(num){
+    return num.toLocaleString("es-AR",{minimumFractionDigits:2});
+}
+
+function formatoPYG(num){
+    return num.toLocaleString("es-PY");
+}
+
+function calcular(){
+
+    let m = parseFloat(monto.value.replace(",", ".")) || 0;
+    let t = parseFloat(tasa.value.replace(",", ".")) || 0;
+
+    if(m === 0 || t === 0){
+        return;
+    }
+
+    let recibir = m * t;
+    let servicio = m * 0.05;
+    let impuesto = servicio * 0.21;
+    let totalCosto = servicio + impuesto;
+    let total = m + totalCosto;
+
+    document.getElementById("recibir").value = formatoPYG(recibir);
+    document.getElementById("servicio").value = formatoARS(servicio);
+    document.getElementById("impuesto").value = formatoARS(impuesto);
+    document.getElementById("totalCosto").value = formatoARS(totalCosto);
+    document.getElementById("total").value = formatoARS(total);
+}
+
+/* VALIDACIÓN */
+function validar(){
+    let ok = true;
+
+    if(!monto.value){
+        monto.classList.add("error");
+        ok = false;
+    }
+
+    if(!tasa.value){
+        tasa.classList.add("error");
+        ok = false;
+    }
+
+    return ok;
+}
+
+/* LIMPIAR */
+function limpiar(){
+    document.querySelectorAll("input").forEach(i => {
+        i.value = "";
+        i.classList.remove("error");
+    });
+}
+
+/* CONFIRMAR */
+function confirmar(){
+
+    if(!validar()){
+        alert("⚠ Complete los campos obligatorios");
+        return;
+    }
+
+    alert(
+`✅ OPERACIÓN CONFIRMADA
+
+Monto envío: $${monto.value}
+Tasa: ${tasa.value}
+Total a pagar: $${document.getElementById("total").value}`
+    );
+}
+</script>
+
+</body>
+</html>
